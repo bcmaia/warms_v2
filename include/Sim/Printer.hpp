@@ -63,19 +63,19 @@ namespace printer {
             inline void print_all (const Board& board) {
                 state = board;
 
-                UVec2 p;
-                UVec2 board_dim = board.get_dimensions();
+                IVec2 p;
+                IVec2 board_dim = board.get_dimensions();
                 for (p.y() = 0; p.y() < board_dim.y(); p.y() += 1) {
                     for (p.x() = 0; p.x() < board_dim.x(); p.x() += 1) {
                         cell::Cell c = board.get_raw(p);
-                        term.printat(p.x(), p.y(), c.to_str(), c.get_color());
+                        term.printat(p.x() + 1, p.y() + 1, c.to_str(), c.get_color());
                     }
                 }
             }
 
             inline void print_diff (const Board& board) {
-                UVec2 p;
-                UVec2 board_dim = board.get_dimensions();
+                IVec2 p;
+                IVec2 board_dim = board.get_dimensions();
                 for (p.y() = 0; p.y() < board_dim.y(); p.y() += 1) {
                     for (p.x() = 0; p.x() < board_dim.x(); p.x() += 1) {
                         cell::Cell c = board.get_raw(p);
@@ -87,15 +87,15 @@ namespace printer {
                         state.set(p, c);
 
                         // Print difference
-                        term.printat(p.x(), p.y(), c.to_str(), c.get_color());
+                        term.printat(p.x() + 1, p.y() + 1, c.to_str(), c.get_color());
                     }
                 }
             }
 
             inline void print_edges () const {
                 term_plus.rect_outline(
-                    UVec2(0u, 0u), 
-                    term_plus.get_dimensions() - UVec2(1u, 1u)
+                    IVec2::Zero(), 
+                    term_plus.get_dimensions() - IVec2(1, 1)
                 );
             }
 

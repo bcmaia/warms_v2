@@ -68,7 +68,7 @@ STD_MODE := debug
 
 CUDACFLAGS := 
 CCFLAGS := -Wall -Wextra
-LDFLAGS := -lm -lncursesw
+LDFLAGS := -lm -lncursesw -ltbb 
 VALGRIND_FLAGS := --leak-check=full --show-leak-kinds=all
 
 

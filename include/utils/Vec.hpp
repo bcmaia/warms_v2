@@ -4,23 +4,20 @@
 #include <stdexcept>
 #include <cmath>
 #include <sstream>
+#include <cstdint>
 
-#include "types.hpp"
+//#include "types.hpp"
 
 
-template <size_t D, typename T>
-class Vec;
+template <size_t D, typename T> class Vec;
 
 // Overload the << operator for Vec
 template <size_t D, typename T>
 std::ostream& operator<<(std::ostream& os, const Vec<D, T>& vec) {
     std::stringstream ss;
-    ss << "(";
-    for (size_t i = 0; i < D; ++i) {
-        ss << vec[i];
-        if (i < D - 1) {
-            ss << ", ";
-        }
+    ss << "(" << vec[0];
+    for (size_t i = 1; i < D; i++) {
+        ss << ", " << vec[i];
     }
     ss << ")";
     return os << ss.str();
@@ -31,28 +28,34 @@ std::ostream& operator<<(std::ostream& os, const Vec<D, T>& vec) {
 template <size_t D, typename T = float>
 class Vec {
 public:
-    static Vec Zero () {
-        return Vec<D, T>(0);
+    static Vec<D, T> Zero () {
+        T a = static_cast<T>(0);
+        return Vec<D, T>(a);
     }
 
-    static Vec Ones () {
-        return Vec<D, T>(1);
+    static Vec<D, T> Ones () {
+        T a = static_cast<T>(1);
+        return Vec<D, T>(a);
     }
 
-    static Vec Up () {
-        return Vec<D, T>(2, {0, -1});
+    static Vec<D, T> Up () {
+        T arr[] = {static_cast<T>(0), static_cast<T>(-1)};
+        return Vec<D, T>(arr);
     }
 
-    static Vec Down () {
-        return Vec<D, T>(2, {0, +1});
+    static Vec<D, T> Down () {
+        T arr[] = {static_cast<T>(0), static_cast<T>(1)};
+        return Vec<D, T>(arr);
     }
 
-    static Vec Left () {
-        return Vec<D, T>(2, {-1, 0});
+    static Vec<D, T> Left () {
+        T arr[] = {static_cast<T>(-1), static_cast<T>(0)};
+        return Vec<D, T>(arr);
     }
 
-    static Vec Right () {
-        return Vec<D, T>(2, {1, 0});
+    static Vec<D, T> Right () {
+        T arr[] = {static_cast<T>(1), static_cast<T>(0)};
+        return Vec<D, T>(arr);
     }
 
     Vec() {}
@@ -377,6 +380,35 @@ public:
         return result;
     }
 
+    template <typename TARGET_TYPE>
+    explicit operator Vec<D, TARGET_TYPE> () {
+        Vec<D, uint32_t> result;
+
+        if constexpr (1 == D) {
+            result[0] = static_cast<uint32_t>(v[0]);
+        } else if constexpr (2 == D) {
+            result[0] = static_cast<uint32_t>(v[0]);
+            result[1] = static_cast<uint32_t>(v[1]);
+        } else if constexpr (3 == D) {
+            result[0] = static_cast<uint32_t>(v[0]);
+            result[1] = static_cast<uint32_t>(v[1]);
+            result[2] = static_cast<uint32_t>(v[2]);
+        } else if constexpr (4 == D) {
+            result[0] = static_cast<uint32_t>(v[0]);
+            result[1] = static_cast<uint32_t>(v[1]);
+            result[2] = static_cast<uint32_t>(v[2]);
+            result[3] = static_cast<uint32_t>(v[3]);
+        } else {
+            for (size_t i = 0; i < D / 2; i += 2) {
+                result[i] = static_cast<uint32_t>(v[i]);
+                result[i + 1] = static_cast<uint32_t>(v[i + 1]);
+            }
+            if constexpr (D % 2) result[D - 1] = static_cast<uint32_t>(v[D - 1]);
+        }
+
+    return result;
+}
+
     T v[D];
 };
 
@@ -387,9 +419,9 @@ Vec<D, T> operator*(T scalar, const Vec<D, T>& vec) {
 }
 
 using Vec2 = Vec<2, float>;
-using IVec2 = Vec<2, int>;
-using UVec2 = Vec<2, unsigned>;
+using IVec2 = Vec<2, int32_t>;
+using UVec2 = Vec<2, uint32_t>;
 
 using Vec3 = Vec<3, float>;
-using IVec3 = Vec<3, int>;
-using UVec3 = Vec<3, unsigned>;
+using IVec3 = Vec<3, int32_t>;
+using UVec3 = Vec<3, uint32_t>;

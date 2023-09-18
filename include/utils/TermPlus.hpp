@@ -23,10 +23,10 @@ namespace term {
             }
 
             inline void refresh () const {term.refresh();}
-            UVec2 get_dimensions () const {return dimensions;}
+            IVec2 get_dimensions () const {return dimensions;}
 
             void printat (
-                const UVec2 p, 
+                const IVec2 p, 
                 const std::wstring s, 
                 const int color_pair = 0
             ) {
@@ -34,7 +34,7 @@ namespace term {
             }
 
             void printat (
-                const UVec2 p, 
+                const IVec2 p, 
                 const std::string s, 
                 const int color_pair = 0
             ) {
@@ -42,7 +42,7 @@ namespace term {
             }
 
             void printat (
-                const UVec2 p, 
+                const IVec2 p, 
                 const char* s, 
                 const int color_pair = 0
             ) {
@@ -50,7 +50,7 @@ namespace term {
             }
 
             void printat (
-                const UVec2 p, 
+                const IVec2 p, 
                 const wchar_t* s, 
                 const int color_pair = 0
             ) {
@@ -58,7 +58,7 @@ namespace term {
             }
 
             // Function to draw a square outline
-            void square_outline (const UVec2 point, const int size) const {
+            void square_outline (const IVec2 point, const int size) const {
                 int x = point.x();
                 int y = point.y();
 
@@ -81,7 +81,7 @@ namespace term {
                 mvaddch(y + size, x + size, ACS_LRCORNER);
             }
 
-            void rect_outline (const UVec2 p1, const UVec2 p2) {
+            void rect_outline (const IVec2 p1, const IVec2 p2) {
                 int width = std::abs(
                     static_cast<int>(p1.x()) - static_cast<int>(p2.x())
                 );
@@ -117,11 +117,11 @@ namespace term {
 
         private:
             Term& term;
-            UVec2 dimensions;
+            IVec2 dimensions;
 
             TermPlus () : 
                 term(Term::instance()),
-                dimensions(UVec2(
+                dimensions(IVec2(
                     static_cast<uint32_t>(Term::instance().get_width()),
                     static_cast<uint32_t>(Term::instance().get_height())
                 ))

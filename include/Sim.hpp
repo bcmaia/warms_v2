@@ -4,6 +4,7 @@
 #include <random>
 #include <vector>
 #include <sstream>
+#include <execution>
 
 #include "Sim/sim_types.hpp"
 #include "Sim/PetriDish.hpp"
@@ -22,7 +23,10 @@ namespace sim {
     class Sim {
         public:
             Sim (uint64_t seed) : rng_gen(seed), term(Term::instance()) {
-                petri_dishes.push_back( PetriDish(seed) );
+                for (size_t i = 0; i < number_of_petri_dishes; i++) {
+                    uint64_t new_seed = rng_gen();
+                    petri_dishes.push_back( PetriDish(new_seed) );
+                }
             }
             
             ~Sim () {}
@@ -46,15 +50,27 @@ namespace sim {
                     case 'k': // Printing off
                         status.printing = !(status.printing);
                         break;
+
+                    case 'o': // powersave
+                        status.powersave = !(status.powersave);
+                        break;
+
+                    case '=': // Changing main board
+                        main_dish_index = (main_dish_index + 1) % number_of_petri_dishes;
+                        break;
+
+                    case '-': // Changing main board
+                        main_dish_index = (number_of_petri_dishes + main_dish_index - 1) % number_of_petri_dishes;
+                        break;
                 }
             }
 
             void run () {
+                auto petri_dish_foward = [&](PetriDish& dish) {
+                    dish.foward();
+                };
 
                 timer::Timer timer;
-
-                const board::Board& main_board = petri_dishes[0].get_board();
-
                 while (status.running) {
                     // Start time measurement
                     timer.start_measurement();
@@ -67,14 +83,22 @@ namespace sim {
                         if (status.powersave) {
                             petri_dishes[0].foward();
                         } else {
-                            for (PetriDish& dish : petri_dishes) {
-                                dish.foward();
-                            }
+                            std::for_each(
+                                std::execution::par, 
+                                petri_dishes.begin(), 
+                                petri_dishes.end(), 
+                                petri_dish_foward
+                            );
                         }
                     }
 
                     // Printing
-                    board_printer.print(main_board, timer, status, generation);
+                    board_printer.print(
+                        petri_dishes[main_dish_index].get_board(), 
+                        timer, 
+                        status, 
+                        generation
+                    );
 
                     // End measurement and sync
                     timer.end_measurement();
@@ -84,8 +108,13 @@ namespace sim {
 
         private:
             unsigned generation = 0;
-            double target_fps = 4.0;
-            double target_delta_time = 1.0 / 4.0;
+            double target_fps = sim::TARGET_FPS;
+            double target_delta_time = 1.0 / sim::TARGET_FPS;
+            size_t number_of_petri_dishes = sim::NUMBER_OF_PETRI_DISHES;
+
+            uint64_t iteration_counter = 0;
+
+            size_t main_dish_index = 3;
 
             SimStatus status;
 
