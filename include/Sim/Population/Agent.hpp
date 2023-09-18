@@ -69,7 +69,7 @@ namespace agent {
                 set_head(board);
             }
 
-            void think (Board& board) {
+            void think () {
                 if (!alive) return; 
                 //head_dir = 
             }
@@ -146,6 +146,20 @@ namespace agent {
                 alive = false;
             }
 
+            void feel (const Board& board) {
+                sensorial_index = 0;
+                short_sight(board);
+                far_sight(board);
+            }
+
+            void short_sight (const Board& board) {
+                
+            }
+
+            void far_sight (const Board& board) {
+            
+            }
+
             void die (Board& board) {
                 if (!alive) return; // You can only die once
                 alive = false;
@@ -168,6 +182,9 @@ namespace agent {
             }
 
         private:
+            size_t sensorial_index;
+            float sensorial_data [sim::SENSORIAL_DATA];
+
             bool alive = true;
             bool dying = false;
             int32_t tangled_with = -1;

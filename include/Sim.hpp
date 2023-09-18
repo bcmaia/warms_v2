@@ -23,7 +23,7 @@ namespace sim {
     class Sim {
         public:
             Sim (uint64_t seed) : rng_gen(seed), term(Term::instance()) {
-                for (size_t i = 0; i < number_of_petri_dishes; i++) {
+                for (size_t i = 0; i < settings.number_of_dishes; i++) {
                     uint64_t new_seed = rng_gen();
                     petri_dishes.push_back( PetriDish(new_seed) );
                 }
@@ -36,31 +36,31 @@ namespace sim {
 
                 switch (input) {
                     case 'q': // Quit
-                        status.running = false; 
+                        settings.running = false; 
                         break;
 
                     case 'g': // Go fast mode
-                        status.syncing = !(status.syncing);
+                        settings.syncing = !(settings.syncing);
                         break;
                     
                     case 'p': // Paused
-                        status.paused = !(status.paused);
+                        settings.paused = !(settings.paused);
                         break;
 
                     case 'k': // Printing off
-                        status.printing = !(status.printing);
+                        settings.printing = !(settings.printing);
                         break;
 
                     case 'o': // powersave
-                        status.powersave = !(status.powersave);
+                        settings.powersave = !(settings.powersave);
                         break;
 
                     case '=': // Changing main board
-                        main_dish_index = (main_dish_index + 1) % number_of_petri_dishes;
+                        settings.main_dish = (settings.main_dish + 1) % settings.number_of_dishes;
                         break;
 
                     case '-': // Changing main board
-                        main_dish_index = (number_of_petri_dishes + main_dish_index - 1) % number_of_petri_dishes;
+                        settings.main_dish = (settings.number_of_dishes + settings.main_dish - 1) % settings.number_of_dishes;
                         break;
                 }
             }
@@ -71,7 +71,7 @@ namespace sim {
                 };
 
                 timer::Timer timer;
-                while (status.running) {
+                while (settings.running) {
                     // Start time measurement
                     timer.start_measurement();
         
@@ -79,9 +79,9 @@ namespace sim {
                     process_input ();
 
                     // Simulation
-                    if (!status.paused) {
-                        if (status.powersave) {
-                            petri_dishes[0].foward();
+                    if (!settings.paused) {
+                        if (settings.powersave) {
+                            petri_dishes[settings.main_dish].foward();
                         } else {
                             std::for_each(
                                 std::execution::par, 
@@ -94,15 +94,15 @@ namespace sim {
 
                     // Printing
                     board_printer.print(
-                        petri_dishes[main_dish_index].get_board(), 
+                        petri_dishes[settings.main_dish].get_board(), 
                         timer, 
-                        status, 
+                        settings, 
                         generation
                     );
 
                     // End measurement and sync
                     timer.end_measurement();
-                    if (status.syncing) timer.sync(target_delta_time);
+                    if (settings.syncing) timer.sync(target_delta_time);
                 }
             }
 
@@ -110,13 +110,10 @@ namespace sim {
             unsigned generation = 0;
             double target_fps = sim::TARGET_FPS;
             double target_delta_time = 1.0 / sim::TARGET_FPS;
-            size_t number_of_petri_dishes = sim::NUMBER_OF_PETRI_DISHES;
 
             uint64_t iteration_counter = 0;
 
-            size_t main_dish_index = 3;
-
-            SimStatus status;
+            SimSettings settings;
 
             std::mt19937_64 rng_gen;
 

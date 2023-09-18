@@ -15,7 +15,7 @@ namespace printer {
     using TermPlus = term::TermPlus;
     using Board = board::Board;
     using Timer = timer::Timer;
-    using SimStatus = sim::SimStatus;
+    using SimSettings = sim::SimSettings;
 
     class Printer {
         public:
@@ -25,20 +25,20 @@ namespace printer {
             void print(
                 const Board& board, 
                 const Timer& timer, 
-                const SimStatus& sim_status,
+                const SimSettings& sim_settings,
                 const unsigned generation
             ) {
-                if (sim_status != saved_status) {
-                    saved_status = sim_status;
+                if (sim_settings != saved_status) {
+                    saved_status = sim_settings;
 
                     print_all(board);
                     print_edges();
-                    print_status(sim_status);
+                    print_settings(sim_settings);
                     print_timer(timer);
                     print_generation(generation);
 
-                    if (sim_status.paused) print_paused();
-                } else if (sim_status.printing && !sim_status.paused) {
+                    if (sim_settings.paused) print_paused();
+                } else if (sim_settings.printing && !sim_settings.paused) {
                     bool board_is_of_diff_size = (
                         0 >= state.get_length() 
                         || state.get_dimensions() != board.get_dimensions()
@@ -47,7 +47,7 @@ namespace printer {
                     if (board_is_of_diff_size) print_all(board);
                     else print_diff(board);
                     print_edges();
-                    print_status(sim_status);
+                    print_settings(sim_settings);
                     print_timer(timer);
                     print_generation(generation);
                 } 
@@ -58,7 +58,7 @@ namespace printer {
             Term& term;
             TermPlus& term_plus;
             Board state;
-            SimStatus saved_status;
+            SimSettings saved_status;
 
             inline void print_all (const Board& board) {
                 state = board;
@@ -107,12 +107,13 @@ namespace printer {
                 );
             }
 
-            inline void print_status (const SimStatus& sim_status) {
+            inline void print_settings (const SimSettings& sim_settings) {
                 std::wstringstream wss;
                 wss << "<" 
-                    << "sync: " << (sim_status.syncing ? "ON" : "OFF") << ", "
-                    << "powersave: " << (sim_status.powersave ? "ON" : "OFF") << ", "
-                    << "ui: " << (sim_status.printing ? "ON" : "OFF") << ", "
+                    << "sync: " << (sim_settings.syncing ? "ON" : "OFF") << ", "
+                    << "powersave: " << (sim_settings.powersave ? "ON" : "OFF") << ", "
+                    << "ui: " << (sim_settings.printing ? "ON" : "OFF") << ", "
+                    << "dish: " << sim_settings.main_dish << " / " << sim_settings.number_of_dishes
                     << ">";
 
                 term.printat(5, 0, wss.str());

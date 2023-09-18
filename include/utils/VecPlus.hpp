@@ -29,4 +29,31 @@ namespace vec {
 
         return point + (amount * vec::vec_from_dir<D, T>(dir));
     }
+
+    template <typename T>
+    Vec<2, T> rotate (const Vec<2, T> point, const types::SimpleDir dir) {
+        Vec<2, T> result;
+        switch (dir) {
+            case types::SimpleDir::Up:      
+                return point;
+            
+            case types::SimpleDir::Right:   
+                result.x() = -point.y();
+                result.y() = point.x();
+                return result;
+
+            case types::SimpleDir::Down:
+                result.x() = point.x();
+                result.y() = -point.y();
+                return result;
+
+            case types::SimpleDir::Left:
+                result.x() = point.y();
+                result.y() = -point.x();
+                return result;
+
+            default:
+                return point;
+        }
+    }
 }

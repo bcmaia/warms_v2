@@ -6,6 +6,8 @@
 #include "Sim/sim_constants.hpp"
 #include "Sim/Board/Cell.hpp"
 #include "utils/Vec.hpp"
+#include "utils/VecPlus.hpp"
+#include "utils/types.hpp"
 
 
 namespace board {
@@ -40,6 +42,15 @@ namespace board {
 
             IVec2 to_valid_position (const IVec2 position) const {
                 return ((position % dimensions) + dimensions) % dimensions;
+            }
+
+            Cell get (
+                const IVec2 pivot, 
+                const IVec2 relative_point,
+                const types::SimpleDir dir
+            ) {
+                IVec2 p = pivot + vec::rotate<int32_t>(relative_point, dir);
+                return get(p);
             }
 
             Cell get (const IVec2 position) const {

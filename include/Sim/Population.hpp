@@ -58,7 +58,8 @@ namespace population {
 
             void foward (Board& board) {
                 auto phase_1_decision_making = [&](Agent& a) {
-                    a.think(board);
+                    a.feel(board);
+                    a.think();
                     a.decide_movement(board);
                 };
 
@@ -111,6 +112,8 @@ namespace population {
                     phase_3_death_checks
                 );
 
+                // Phase 3.5: entenglement check
+                // NOTE: Cannot be done in parallel.
                 for (Agent& a : live_agents) {
                     int32_t entangled = a.get_entanglement();
                     if (0 > entangled && live_agents.size() <= entangled) continue;
