@@ -5,14 +5,19 @@
 #include <random>
 #include <sstream>
 
+#include <cmath>
+#include <limits>
+
 #include "utils/types.hpp"
 #include "utils/Vec.hpp"
 #include "utils/VecPlus.hpp"
 #include "Sim/sim_constants.hpp"
 #include "Sim/Board.hpp"
 #include "Sim/Board/Cell.hpp"
+#include "Population/Genome.hpp"
 
 #include "utils/Term.hpp"
+#include "utils/mymath.hpp"
 
 
 namespace agent {
@@ -25,53 +30,122 @@ namespace agent {
             Agent () {}
             Agent (
                 const uint64_t seed,
-                const IVec2 position,
-                Board& board,
                 const int32_t agent_id
             ) : 
-                id(agent_id)
+                id(agent_id),
+                rng_gen(seed)
             {
-                std::mt19937_64 rng_gen (seed);
                 std::uniform_int_distribution dir_dist (1, 4);
                 SimpleDir dir = static_cast<SimpleDir>( dir_dist(rng_gen) );
-                //dir = SimpleDir::Up;
+
+                uint64_t new_seed = rng_gen();
+                genome = Genome(new_seed);
 
                 head_dir = dir;
                 neck_dir = dir;
                 tail_dir = dir;
                 decided_dir = dir;
 
-                IVec2 temp = position ; //% board.get_dimensions();
-                head_position = temp;
-                tail_position = temp;
-                neck_position = temp;
-                set_head(board);
+                // IVec2 temp = position ; //% board.get_dimensions();
+                // head_position = temp;
+                // tail_position = temp;
+                // neck_position = temp;
             }
+
+            Agent (const uint64_t seed) : genome(seed) {
+
+            } 
 
             Agent (
                 const uint64_t seed,
-                const IVec2 position,
                 const SimpleDir dir,
-                Board& board,
                 const int32_t agent_id
             ) : 
-                id(agent_id)
-            {
+                id(agent_id),
+                rng_gen(seed)
+            { 
                 head_dir = dir;
                 neck_dir = dir;
                 tail_dir = dir;
                 decided_dir = dir;
 
-                IVec2 temp = position ; //% board.get_dimensions();
+                uint64_t new_seed = rng_gen();
+                genome = Genome(new_seed);
+            }
+
+            int findNaNIndex(const std::vector<float>& vec) {
+                for (size_t i = 0; i < vec.size(); ++i) {
+                    if (std::isnan(vec[i])) {
+                        return static_cast<int>(i); // Convert index to int before returning
+                    }
+                }
+                
+                // NaN not found, return -1 to indicate failure
+                return -1;
+            }
+
+
+            Agent (
+                const Agent& daddy, 
+                const Agent& mommy, 
+                const uint64_t seed, 
+                const int32_t agent_id
+            ) :
+                id(agent_id),
+                rng_gen(seed)
+            {
+                std::uniform_int_distribution dir_dist (1, 4);
+                SimpleDir dir = static_cast<SimpleDir>( dir_dist(rng_gen) );
+
+                uint64_t new_seed = rng_gen();
+                genome = Genome(daddy.get_genome(), mommy.get_genome(), new_seed);
+
+                head_dir = dir;
+                neck_dir = dir;
+                tail_dir = dir;
+                decided_dir = dir;
+            }
+
+            void put_on_board (Board& board, const IVec2 position) {
+                IVec2 temp = position; //% board.get_dimensions();
                 head_position = temp;
                 tail_position = temp;
                 neck_position = temp;
+
                 set_head(board);
             }
 
             void think () {
                 if (!alive) return; 
                 //head_dir = 
+
+                float results [sim::NN_OUTPUT_SIZE];
+                genome.think(sensorial_data_vec.data(), results);
+
+                std::stringstream ss;
+                ss << "<NaN: " << findNaNIndex(sensorial_data, 224) 
+                    << ", Size:" << sensorial_data_vec.size()
+                    << ">";
+                term::Term::instance().printat(2, 5, ss.str());
+
+                mymath::softmax<sim::NN_OUTPUT_SIZE>(results);
+                uint64_t new_seed = rng_gen();
+                size_t decision = mymath::rand_index<sim::NN_OUTPUT_SIZE>(results, new_seed);
+
+                if (0 == decision) decided_dir = types::rotate(head_dir, true);
+                else if (1 == decision) decided_dir = types::rotate(head_dir, false);
+                // else if decision == 3 then keep same direction
+            }
+
+            int findNaNIndex(const float arr[], size_t N) {
+                for (size_t i = 0; i < N; ++i) {
+                    if (std::isnan(arr[i])) {
+                        return static_cast<int>(i); // Convert index to int before returning
+                    }
+                }
+
+                // NaN not found, return -1 to indicate failure
+                return -1;
             }
 
             void decide_movement (Board& board) {
@@ -133,6 +207,11 @@ namespace agent {
             int32_t get_id () const {return id;}
             void start_dying () {dying = true;}
             int32_t get_entanglement () const {return tangled_with;}
+            float get_fitness () const {return fitness;}
+            const Genome& get_genome () const {return genome;}
+
+            void set_fitness (const float new_fitness) {fitness = new_fitness;}
+            void inc_fitness (const float increment) {fitness += increment;}
 
             uint32_t potential_length () const {
                 return (
@@ -148,16 +227,66 @@ namespace agent {
 
             void feel (const Board& board) {
                 sensorial_index = 0;
+                sensorial_data_vec.clear();
+
                 short_sight(board);
                 far_sight(board);
+
+                // for (int i = 0; i < sim::SENSORIAL_DATA; i++) {
+                //     if ( std::isnan(sensorial_data[i]) ) {
+                //         std::stringstream ss;
+                //         ss << "<ERROR " << i << ">";
+                //         // term::Term::instance().printat(2, 2, ss.str());
+                //         throw std::runtime_error(ss.str());
+                //     }
+                // }
             }
 
             void short_sight (const Board& board) {
-                
+                // cell::Cell c [7];
+                for (int32_t i = -3; i <= 3; i++) {
+                    for (int32_t j = -3; j <= 3; j++) {
+                        if (0 == i && 0 == j) continue;
+                        cell::Cell c = board.get(head_position, IVec2(j, i), head_dir);
+                        fell_cell(c);
+                    }
+                }
             }
 
             void far_sight (const Board& board) {
-            
+                for (int32_t i = -1; i <= +1; i++) { // 'outer_loop
+                    for (int32_t j = -1; j <= +1; j++) { // 'mid_loop
+                        if (0 == i && 0 == j) continue;
+
+                        for (int32_t range = 1; range < 16; range++) { // 'inner_loop
+                            cell::Cell c = board.get(head_position, range * IVec2(j, i), head_dir);
+                            if (c.is_interesting()) {
+                                fell_cell(c);
+                                goto continue_mid_loop;
+                            }
+                        }
+
+                        {
+                            cell::Cell c = board.get(head_position, 16 * IVec2(j, i), head_dir);
+                            fell_cell(c);
+                        }
+
+                        continue_mid_loop: continue;
+                    }
+                }
+            }
+
+            void fell_cell (const cell::Cell c) {
+                sensorial_data[sensorial_index + 0] = c.is_snake_head() ? 1.0 : 0.0;
+                sensorial_data[sensorial_index + 1] = c.is_snake_head() ? 1.0 : 0.0;
+                sensorial_data[sensorial_index + 2] = c.is_snake_head() ? 1.0 : 0.0;
+                sensorial_data[sensorial_index + 3] = c.is_snake_head() ? 1.0 : 0.0;
+                sensorial_index += 4;
+
+                sensorial_data_vec.push_back(c.is_snake_head() ? 1.0 : 0.0);
+                sensorial_data_vec.push_back(c.is_snake_body() ? 1.0 : 0.0);
+                sensorial_data_vec.push_back(c.is_food() ? 1.0 : 0.0);
+                sensorial_data_vec.push_back(c.is_wall() ? 1.0 : 0.0);
             }
 
             void die (Board& board) {
@@ -182,8 +311,12 @@ namespace agent {
             }
 
         private:
+            std::mt19937_64 rng_gen;
+            Genome genome;
+
             size_t sensorial_index;
             float sensorial_data [sim::SENSORIAL_DATA];
+            std::vector<float> sensorial_data_vec;
 
             bool alive = true;
             bool dying = false;

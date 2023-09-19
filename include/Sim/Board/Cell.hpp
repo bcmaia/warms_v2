@@ -23,6 +23,7 @@ namespace cell {
             static Cell Empty () {return Cell(CellType::Empty, 0);}
             static Cell Food () {return Cell(CellType::Food, 1);}
             static Cell Reserved () {return Cell(CellType::Reserved, 0);}
+            static Cell Wall () {return Cell(CellType::Wall, 2);}
 
             Cell () {}
 
@@ -50,6 +51,9 @@ namespace cell {
             Color get_color () const {return color;}
             bool is_empty () const {return CellType::Empty == type;}
             bool is_food () const {return CellType::Food == type;}
+            bool is_wall () const {return CellType::Wall == type;}
+            bool is_snake_head () const {return CellType::SnakeHead == type;}
+            bool is_snake_body () const {return CellType::SnakeHead == type;}
             SimpleDir get_dir () const {return dir;}
             int32_t get_id () const {return id;}
 
@@ -66,6 +70,12 @@ namespace cell {
                     CellType::Wall == type
                     || CellType::SnakeBody == type
                     || CellType::SnakeHead == type
+                );
+            }
+
+            bool is_interesting () const {
+                return (
+                    is_wall() || is_organism() || is_food()
                 );
             }
             

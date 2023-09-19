@@ -28,6 +28,7 @@ namespace board {
                     dimensions.y(), 
                     cell_vector(dimensions.x(), Cell::Empty())
                 );
+                procedural_walls(5);
             }
 
             Board (unsigned board_width, unsigned board_height, uint64_t seed) 
@@ -40,6 +41,49 @@ namespace board {
                 add_food();
             }
 
+            void procedural_walls (short amount = 5) {
+                cell_matrix temp = cell_matrix(
+                    dimensions.y(), 
+                    cell_vector(dimensions.x(), Cell::Empty())
+                );
+
+                IVec2 p;
+                std::bernoulli_distribution choice (sim::PROCEDURAL_WALLS_FACTOR);
+                for (p.y() = 0; p.y() < dimensions.y(); p.y() += 1) {
+                    for (p.x() = 0; p.x() < dimensions.x(); p.x() += 1) {
+                        short i = sorrounding_walls(p);
+                        if (choice(rng_gen)) temp[p.y()][p.x()] = Cell::Wall();
+                        if (0 >= i) continue;
+                        if (choice(rng_gen)) temp[p.y()][p.x()] = Cell::Wall();
+                        if (1 >= i) continue;
+                        if (choice(rng_gen)) temp[p.y()][p.x()] = Cell::Wall();
+                        if (2 >= i) continue;
+                        if (choice(rng_gen)) temp[p.y()][p.x()] = Cell::Wall();
+                        if (3 >= i) continue;
+                        if (choice(rng_gen)) temp[p.y()][p.x()] = Cell::Wall();
+                        if (4 >= i) continue;
+                        if (choice(rng_gen)) temp[p.y()][p.x()] = Cell::Wall();
+                    }
+                }
+
+                for (p.y() = 0; p.y() < dimensions.y(); p.y() += 1) {
+                    for (p.x() = 0; p.x() < dimensions.x(); p.x() += 1) {
+                        set(p, temp[p.y()][p.x()]);
+                    }
+                }
+
+                if (amount > 0) procedural_walls(amount - 1);
+            }
+
+            short sorrounding_walls (const IVec2 p) const {
+                return (
+                    static_cast<short>( get(p + IVec2::Up()).is_wall() )
+                    + static_cast<short>( get(p + IVec2::Right()).is_wall() )
+                    + static_cast<short>( get(p + IVec2::Down()).is_wall() )
+                    + static_cast<short>( get(p + IVec2::Left()).is_wall() )
+                );
+            }
+
             IVec2 to_valid_position (const IVec2 position) const {
                 return ((position % dimensions) + dimensions) % dimensions;
             }
@@ -48,7 +92,7 @@ namespace board {
                 const IVec2 pivot, 
                 const IVec2 relative_point,
                 const types::SimpleDir dir
-            ) {
+            ) const {
                 IVec2 p = pivot + vec::rotate<int32_t>(relative_point, dir);
                 return get(p);
             }
@@ -80,6 +124,18 @@ namespace board {
                         Cell c = get_raw(p);
                         if (c.is_organism() && c.get_id() == id) {
                             set_raw(p, Cell::Food());
+                        }
+                    }
+                }
+            }
+
+            void clear () {
+                IVec2 p = IVec2::Zero();
+                for (p.y() = 0; p.y() < dimensions.y(); p.y() += 1) {
+                    for (p.x() = 0; p.x() < dimensions.x(); p.x() += 1) {
+                        Cell c = get_raw(p);
+                        if (c.is_organism() || c.is_food()) {
+                            set_raw(p, Cell::Empty());
                         }
                     }
                 }

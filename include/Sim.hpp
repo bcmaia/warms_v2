@@ -13,6 +13,7 @@
 #include "utils/Term.hpp"
 // #include "utils/TermPlus.hpp"
 #include "utils/Timer.hpp"
+#include "Sim/Population/Goats.hpp"
 
 
 namespace sim {
@@ -92,6 +93,10 @@ namespace sim {
                         }
                     }
 
+                    if (check_running()) {
+                        next_gen();
+                    }
+
                     // Printing
                     board_printer.print(
                         petri_dishes[settings.main_dish].get_board(), 
@@ -104,6 +109,40 @@ namespace sim {
                     timer.end_measurement();
                     if (settings.syncing) timer.sync(target_delta_time);
                 }
+            }
+
+            bool check_running () {
+                if (iteration_counter > sim::MAX_ITERATION_NUMBER) return true;
+
+                bool all_halted = true;
+
+                for (const PetriDish& dish : petri_dishes) {
+                    if (!dish.has_halted()) {
+                        all_halted = false;
+                        break;
+                    }
+                }
+
+                return all_halted;
+            }
+
+            void next_gen() {
+                generation++;
+                iteration_counter = 0;
+
+                for (PetriDish& dish : petri_dishes) {
+                    dish.save_results();
+                }
+
+                for (PetriDish& dish : petri_dishes) {
+                    dish.next_gen();
+                }
+
+                for (PetriDish& dish : petri_dishes) {
+                    dish.start_now();
+                }
+
+                population::Goats::instance().decay();
             }
 
         private:

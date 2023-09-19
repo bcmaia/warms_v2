@@ -45,6 +45,7 @@ namespace printer {
                     );
 
                     if (board_is_of_diff_size) print_all(board);
+                    else if (last_generation < generation) {last_generation++; print_all(board);}
                     else print_diff(board);
                     print_edges();
                     print_settings(sim_settings);
@@ -59,6 +60,7 @@ namespace printer {
             TermPlus& term_plus;
             Board state;
             SimSettings saved_status;
+            unsigned last_generation = 0;
 
             inline void print_all (const Board& board) {
                 state = board;

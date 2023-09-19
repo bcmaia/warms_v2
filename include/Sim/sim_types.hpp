@@ -13,7 +13,7 @@ namespace sim {
         bool paused = false;
         bool powersave = false;
         unsigned main_dish = 0;
-        unsigned number_of_dishes = 256;// sim::NUMBER_OF_PETRI_DISHES;
+        unsigned number_of_dishes = sim::NUMBER_OF_PETRI_DISHES;
 
         bool operator==(const SimSettings& other) const {
             return (

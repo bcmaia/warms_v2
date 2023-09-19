@@ -7,6 +7,7 @@
 #include <execution>
 
 #include "Population/Agent.hpp"
+#include "Population/Creator.hpp"
 #include "Sim/Board.hpp"
 #include "utils/types.hpp"
 
@@ -43,18 +44,44 @@ namespace population {
                 //     Agent(1, IVec2(30+1, 10+1), types::SimpleDir::Right, board, 1)
                 // );
                 
-                
-                for (size_t i = 0; i < pop_size && i < positions.size(); i++) {
+                size_t i;
+                for (i = 0; i < pop_size && i < positions.size(); i++) {
                     uint64_t new_seed = rnd_gen();
                     live_agents.push_back(
-                        Agent(new_seed, positions[i], board, i)
+                        Agent(new_seed, i)
                     );
                 }
-                
+
+                i = 0;
+                for (Agent& a : live_agents) {
+                    if (i >= pop_size && i >= positions.size()) break;
+                    a.put_on_board(board, positions[i++]);
+                }
             }
 
 
             size_t get_live_pop_size () const {return live_agents.size();}
+
+            void repopulate (Board& board) {
+                dead_agents.clear();
+                uint64_t new_seed = rnd_gen();
+                live_agents = population::Creator::instance().populate(
+                    new_seed,
+                    pop_size
+                );
+
+                // NOTE: it might be a good idea to reserve memory here
+                std::vector<IVec2> positions = board.get_empty_positions(
+                    pop_size,
+                    false
+                );
+
+                size_t i = 0;
+                for (Agent& a : live_agents) {
+                    if (i >= pop_size && i >= positions.size()) break;
+                    a.put_on_board(board, positions[i++]);
+                }
+            }
 
             void foward (Board& board) {
                 auto phase_1_decision_making = [&](Agent& a) {
@@ -89,6 +116,7 @@ namespace population {
                 auto phase_5_move_head = [&](Agent& a) {
                     a.feed(board);
                     a.move_head(board);
+                    if (a.is_alive()) a.inc_fitness(0.01);
                 };
 
                 std::for_each(
