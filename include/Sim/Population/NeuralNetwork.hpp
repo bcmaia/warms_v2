@@ -15,7 +15,9 @@
 using Layer1 = NeuralLayer<sim::NN_INPUT_SIZE, sim::NN_L1_SIZE>;
 using Layer2 = NeuralLayer<sim::NN_L1_SIZE, sim::NN_L2_SIZE>;
 using Layer3 = NeuralLayer<sim::NN_L2_SIZE, sim::NN_L3_SIZE>;
-using OutputLayer = NeuralLayer<sim::NN_L3_SIZE, sim::NN_OUTPUT_SIZE>;
+using Layer4 = NeuralLayer<sim::NN_L3_SIZE, sim::NN_L4_SIZE>;
+using Layer5 = NeuralLayer<sim::NN_L4_SIZE, sim::NN_L5_SIZE>;
+using OutputLayer = NeuralLayer<sim::NN_L5_SIZE, sim::NN_OUTPUT_SIZE>;
 // using OutputLayer = NeuralLayer<sim::NN_INPUT_SIZE, sim::NN_OUTPUT_SIZE>;
 
 
@@ -28,6 +30,8 @@ public:
         layer_1 = Layer1(g1.get_layer_1(), g2.get_layer_1(), seed);
         layer_2 = Layer2(g1.get_layer_2(), g2.get_layer_2(), seed);
         layer_3 = Layer3(g1.get_layer_3(), g2.get_layer_3(), seed);
+        layer_4 = Layer4(g1.get_layer_4(), g2.get_layer_4(), seed);
+        layer_5 = Layer5(g1.get_layer_5(), g2.get_layer_5(), seed);
         output_layer = OutputLayer(g1.get_output_layer(), g2.get_output_layer(), seed);
     }
 
@@ -35,6 +39,8 @@ public:
         layer_1(seed),
         layer_2(seed),
         layer_3(seed),
+        layer_4(seed),
+        layer_5(seed),
         output_layer(seed)
     {}
     
@@ -70,8 +76,14 @@ public:
 
         float layer_3_output[sim::NN_L3_SIZE] = {};
         layer_3.forward(layer_2_output, layer_3_output);
+
+        float layer_4_output[sim::NN_L4_SIZE] = {};
+        layer_4.forward(layer_3_output, layer_4_output);
+
+        float layer_5_output[sim::NN_L5_SIZE] = {};
+        layer_5.forward(layer_4_output, layer_5_output);
         
-        output_layer.forward(layer_3_output, outputs);
+        output_layer.forward(layer_5_output, outputs);
     }
 
     int checkValidOutput(const float output[], size_t size) const {
@@ -86,6 +98,8 @@ public:
     const Layer1& get_layer_1 () const {return layer_1;}
     const Layer2& get_layer_2 () const {return layer_2;}
     const Layer3& get_layer_3 () const {return layer_3;}
+    const Layer4& get_layer_4 () const {return layer_4;}
+    const Layer5& get_layer_5 () const {return layer_5;}
     const OutputLayer& get_output_layer () const {return output_layer;}
 
     NeuralNetwork& operator= (const NeuralNetwork& other) {
@@ -100,5 +114,7 @@ private:
     Layer1 layer_1;
     Layer2 layer_2;
     Layer3 layer_3;
+    Layer4 layer_4;
+    Layer5 layer_5;
     OutputLayer output_layer;
 };
