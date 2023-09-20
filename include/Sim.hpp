@@ -142,6 +142,8 @@ namespace sim {
                     dish.start_now();
                 }
 
+                population::Creator::instance().clear();
+
                 population::Goats::instance().decay();
             }
 

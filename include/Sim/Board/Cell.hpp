@@ -13,9 +13,9 @@ namespace cell {
 
 
     enum class CellType : uint8_t {
-        Empty = 0, Wall = 1, Food = 2, 
-        SnakeBody = 3, SnakeHead = 4,
-        Reserved = 5
+        Empty = 0, Wall, Food, 
+        SnakeBody, SnakeHead, SnakeTail,
+        Reserved ,
     };
 
     class Cell {
@@ -52,6 +52,7 @@ namespace cell {
             bool is_empty () const {return CellType::Empty == type;}
             bool is_food () const {return CellType::Food == type;}
             bool is_wall () const {return CellType::Wall == type;}
+            bool is_snake_tail () const {return CellType::SnakeTail == type;}
             bool is_snake_head () const {return CellType::SnakeHead == type;}
             bool is_snake_body () const {return CellType::SnakeHead == type;}
             SimpleDir get_dir () const {return dir;}
@@ -61,6 +62,7 @@ namespace cell {
                 return (
                     CellType::SnakeBody == type 
                     || CellType::SnakeHead == type
+                    || CellType::SnakeTail == type
                 );
             }
 
@@ -70,6 +72,7 @@ namespace cell {
                     CellType::Wall == type
                     || CellType::SnakeBody == type
                     || CellType::SnakeHead == type
+                    || CellType::SnakeTail == type
                 );
             }
 
@@ -79,7 +82,7 @@ namespace cell {
                 );
             }
             
-            std::wstring to_str () {
+            std::wstring to_str () const {
                 // std::wstringstream ss;
                 // if (-1 == id) ss << L".";
                 // else ss << id;
@@ -89,8 +92,30 @@ namespace cell {
                 switch (type) {
                     case CellType::Empty: return L" ";
                     case CellType::Food: return L"&";
-                    case CellType::SnakeBody: return L"*";
-                    case CellType::SnakeHead: return L"@";
+                    case CellType::SnakeBody: 
+                        switch (dir) {
+                            case SimpleDir::Up: return L"↑";
+                            case SimpleDir::Right: return L"→";
+                            case SimpleDir::Down: return L"↓";
+                            case SimpleDir::Left: return L"←";
+                        }
+                        return L"*";
+                    case CellType::SnakeTail:
+                        switch (dir) {
+                            case SimpleDir::Up: return L"↟";
+                            case SimpleDir::Right: return L"↠";
+                            case SimpleDir::Down: return L"↡";
+                            case SimpleDir::Left: return L"↞";
+                        }
+                        return L"+";
+                    case CellType::SnakeHead:
+                        switch (dir) {
+                            case SimpleDir::Up: return L"⇑";
+                            case SimpleDir::Right: return L"⇒";
+                            case SimpleDir::Down: return L"⇓";
+                            case SimpleDir::Left: return L"⇐";
+                        }
+                        return L"@";
                     case CellType::Reserved: return L"R";
                     case CellType::Wall: return L"#";
                     default: return L" ";

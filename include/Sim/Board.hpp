@@ -28,7 +28,9 @@ namespace board {
                     dimensions.y(), 
                     cell_vector(dimensions.x(), Cell::Empty())
                 );
-                procedural_walls(5);
+                
+                procedural_obstacles(5);
+                make_board_grate_again();
             }
 
             Board (unsigned board_width, unsigned board_height, uint64_t seed) 
@@ -41,46 +43,61 @@ namespace board {
                 add_food();
             }
 
-            void procedural_walls (short amount = 5) {
-                cell_matrix temp = cell_matrix(
-                    dimensions.y(), 
-                    cell_vector(dimensions.x(), Cell::Empty())
-                );
+            void procedural_obstacles (short amount = 5) {
+                for (short a = 0; a < amount; a++) {
+                    cell_matrix temp = cell_matrix(
+                        dimensions.y(), 
+                        cell_vector(dimensions.x(), Cell::Empty())
+                    );
 
-                IVec2 p;
-                std::bernoulli_distribution choice (sim::PROCEDURAL_WALLS_FACTOR);
-                for (p.y() = 0; p.y() < dimensions.y(); p.y() += 1) {
-                    for (p.x() = 0; p.x() < dimensions.x(); p.x() += 1) {
-                        short i = sorrounding_walls(p);
-                        if (choice(rng_gen)) temp[p.y()][p.x()] = Cell::Wall();
-                        if (0 >= i) continue;
-                        if (choice(rng_gen)) temp[p.y()][p.x()] = Cell::Wall();
-                        if (1 >= i) continue;
-                        if (choice(rng_gen)) temp[p.y()][p.x()] = Cell::Wall();
-                        if (2 >= i) continue;
-                        if (choice(rng_gen)) temp[p.y()][p.x()] = Cell::Wall();
-                        if (3 >= i) continue;
-                        if (choice(rng_gen)) temp[p.y()][p.x()] = Cell::Wall();
-                        if (4 >= i) continue;
-                        if (choice(rng_gen)) temp[p.y()][p.x()] = Cell::Wall();
+                    IVec2 p;
+                    std::uniform_real_distribution<float> dist (0.0, 1.0);
+                    for (p.y() = 0; p.y() < dimensions.y(); p.y() += 1) {
+                        for (p.x() = 0; p.x() < dimensions.x(); p.x() += 1) {
+                            short i = sorrounding_walls(p);
+
+                            float v;
+                            switch (i) {
+                                case 0: v = sim::PROCEDURAL_WALLS_FACTOR_0; break;
+                                case 1: v = sim::PROCEDURAL_WALLS_FACTOR_1; break;
+                                case 2: v = sim::PROCEDURAL_WALLS_FACTOR_2; break;
+                                case 3: v = sim::PROCEDURAL_WALLS_FACTOR_3; break;
+                                case 4: v = sim::PROCEDURAL_WALLS_FACTOR_4; break;
+                                default: v = 0.01;
+                            }
+
+                            if (dist(rng_gen) <= v) temp[p.y()][p.x()] = Cell::Wall();
+                            else temp[p.y()][p.x()] = get_raw(p);
+                        }
                     }
+
+                    for (p.y() = 0; p.y() < dimensions.y(); p.y() += 1) {
+                        for (p.x() = 0; p.x() < dimensions.x(); p.x() += 1) {
+                            set(p, temp[p.y()][p.x()]);
+                        }
+                    }
+
+                }
+            }
+
+            void make_board_grate_again() {
+                for (int32_t y = 0; y < dimensions.y(); y++) {
+                    set_raw(IVec2(0, y), Cell::Wall());
+                    set_raw(IVec2(dimensions.x() - 1, y), Cell::Wall());
                 }
 
-                for (p.y() = 0; p.y() < dimensions.y(); p.y() += 1) {
-                    for (p.x() = 0; p.x() < dimensions.x(); p.x() += 1) {
-                        set(p, temp[p.y()][p.x()]);
-                    }
+                for (int32_t x = 0; x < dimensions.x(); x++) {
+                    set_raw(IVec2(x, 0), Cell::Wall());
+                    set_raw(IVec2(x, dimensions.y() - 1), Cell::Wall());
                 }
-
-                if (amount > 0) procedural_walls(amount - 1);
             }
 
             short sorrounding_walls (const IVec2 p) const {
                 return (
-                    static_cast<short>( get(p + IVec2::Up()).is_wall() )
-                    + static_cast<short>( get(p + IVec2::Right()).is_wall() )
-                    + static_cast<short>( get(p + IVec2::Down()).is_wall() )
-                    + static_cast<short>( get(p + IVec2::Left()).is_wall() )
+                    ( get(p + IVec2::Up()).is_wall() ? 1 : 0)
+                    + ( get(p + IVec2::Right()).is_wall() ? 1 : 0 )
+                    + ( get(p + IVec2::Down()).is_wall() ? 1 : 0 )
+                    + ( get(p + IVec2::Left()).is_wall() ? 1 : 0 )
                 );
             }
 

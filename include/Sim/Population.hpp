@@ -91,32 +91,29 @@ namespace population {
                 };
 
                 auto phase_2_move_tail = [&](Agent& a) {
+                    if constexpr (sim::LIVE_TAIL) return;
                     a.move_tail(board);
                 };
 
                 auto phase_3_death_checks = [&](Agent& a) {
-                    a.expend_energy();
-
                     bool time_to_die = a.is_alive() && (
                         a.has_starved()
                         || a.check_for_static_colision(board)
                         || check_head_on_collision(board, a.get_head_position())
-                        //|| check_head_on_collision(board, a.next_position(board))
                     );
 
                     if (time_to_die) {a.start_dying();}
-
-                    //print_surrounding_ids(board, a.get_head_position(), 2 + a.get_id());
                 };
 
-                auto phase_4_murder_time = [&](Agent& a) {
-                    if (a.is_dying()) a.die(board);
-                };
+                // auto phase_4_murder_time = [&](Agent& a) {
+                //     if (a.is_dying()) a.die(board);
+                // };
 
                 auto phase_5_move_head = [&](Agent& a) {
                     a.feed(board);
+                    a.expend_energy();
                     a.move_head(board);
-                    if (a.is_alive()) a.inc_fitness(0.01);
+                    a.survival_reward();
                 };
 
                 std::for_each(
@@ -143,22 +140,23 @@ namespace population {
                 // Phase 3.5: entenglement check
                 // NOTE: Cannot be done in parallel.
                 for (Agent& a : live_agents) {
-                    int32_t entangled = a.get_entanglement();
-                    if (0 > entangled && live_agents.size() <= entangled) continue;
-
-                    live_agents[entangled].set_dead();
-                    a.set_dead();
-
+                    // If a is not entangled
+                    if (!(a.is_entangled())) continue;
                     board.die_by_id(a.get_id());
-                    board.die_by_id(entangled);
+                    a.set_dead();
+                    
+                    int32_t entangled_with = a.get_entangled_with();
+                    if (0 > entangled_with || live_agents.size() <= entangled_with) continue;
+                    board.die_by_id(entangled_with);
+                    live_agents[entangled_with].set_dead();
                 }
 
-                std::for_each(
-                    std::execution::par, 
-                    live_agents.begin(), 
-                    live_agents.end(), 
-                    phase_4_murder_time
-                );
+                // std::for_each(
+                //     std::execution::par, 
+                //     live_agents.begin(), 
+                //     live_agents.end(), 
+                //     phase_4_murder_time
+                // );
 
                 std::for_each(
                     std::execution::par, 
@@ -167,7 +165,13 @@ namespace population {
                     phase_5_move_head
                 );
 
-                // Check if agents are alive and move them to dead_agents if not
+                // for (Agent& a : live_agents) {
+                //     if (a.is_dying()) {
+                //         board.die_by_id(a.get_id());
+                //         a.set_dead();
+                //     }
+                // }
+
                 for (auto it = live_agents.begin(); it != live_agents.end();) {
                     if (!it->is_alive()) {
                         dead_agents.push_back(*it);

@@ -44,7 +44,7 @@ namespace printer {
                         || state.get_dimensions() != board.get_dimensions()
                     );
 
-                    if (board_is_of_diff_size) print_all(board);
+                    if (board_is_of_diff_size || !(counter++)) print_all(board);
                     else if (last_generation < generation) {last_generation++; print_all(board);}
                     else print_diff(board);
                     print_edges();
@@ -56,11 +56,17 @@ namespace printer {
 
 
         private:
+            uint8_t counter = 0;
+
             Term& term;
             TermPlus& term_plus;
             Board state;
             SimSettings saved_status;
             unsigned last_generation = 0;
+
+            inline void print_cell (const cell::Cell c, const IVec2 p) const {
+                term.printat(p.x() + 1, p.y() + 1, c.to_str(), c.get_color());
+            }
 
             inline void print_all (const Board& board) {
                 state = board;
@@ -70,7 +76,7 @@ namespace printer {
                 for (p.y() = 0; p.y() < board_dim.y(); p.y() += 1) {
                     for (p.x() = 0; p.x() < board_dim.x(); p.x() += 1) {
                         cell::Cell c = board.get_raw(p);
-                        term.printat(p.x() + 1, p.y() + 1, c.to_str(), c.get_color());
+                        print_cell(c, p);
                     }
                 }
             }
@@ -89,7 +95,7 @@ namespace printer {
                         state.set(p, c);
 
                         // Print difference
-                        term.printat(p.x() + 1, p.y() + 1, c.to_str(), c.get_color());
+                        print_cell(c, p);
                     }
                 }
             }
@@ -102,8 +108,10 @@ namespace printer {
             }
 
             inline void print_timer (const Timer& timer) const {
+                uint32_t x = 100 >= term.get_width() ? 2 : term.get_width() - 100;
+
                 term.printat(
-                    term.get_width() - 101, 
+                    x, 
                     term.get_height() - 1,
                     timer.to_str()
                 );
@@ -134,6 +142,7 @@ namespace printer {
             } 
 
             inline void print_generation (const unsigned generation) {
+                if (24 > term.get_width()) return;
                 std::wstringstream wss;
                 wss << "<Generation: " << generation << ">";
                 term.printat(term.get_width() - 24, 0,  wss.str());

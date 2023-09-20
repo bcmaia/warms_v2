@@ -57,8 +57,8 @@ namespace term {
                 // If the desired (x, y) coords are inside the terminal.
                 if (x >= 0 && x < width && y >= 0 && y < height) {
                     setlocale(LC_ALL, "");
-                    mvaddwstr(y, x, text);
                     attron(COLOR_PAIR(color_pair));
+                    mvaddwstr(y, x, text);
                     attroff(COLOR_PAIR(color_pair));
                 } else {
                     // Handle out-of-bounds error
@@ -123,6 +123,13 @@ namespace term {
                 return getch();
             }
 
+            /**
+            * @brief Cleanup function to be called at program exit.
+            */
+            static void cleanup() {
+                endwin();
+            }
+
         private:
             /**
             * @brief Private constructor to initialize the ncurses environment.
@@ -169,19 +176,12 @@ namespace term {
             */
             static void init_colors() {
                 if (has_colors() && COLOR_PAIRS >= 16) {
-                    for (int i = 0; i < 16; ++i) {
-                        init_pair(i + 1, COLOR_BLACK, i);
+                    for (int i = 0; i < 32; ++i) {
+                        init_pair(i + 1, COLOR_BLACK, i);  // Set foreground color to i and background to black
                     }
                 } else {
                     throw std::runtime_error("Not enough color support!\n");
                 }
-            }
-
-            /**
-            * @brief Cleanup function to be called at program exit.
-            */
-            static void cleanup() {
-                endwin();
             }
 
         private:

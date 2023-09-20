@@ -54,8 +54,8 @@ namespace petridish {
                 const std::vector<Agent>& alive = population.get_live_agents();
                 const std::vector<Agent>& dead = population.get_dead_agents();
 
-                if (0 < alive.size()) creator.save(alive);
-                if (0 < dead.size()) creator.save(dead);
+                if (alive.size() > 0) creator.save(alive);
+                if (dead.size() > 0) creator.save(dead);
             }
 
             void next_gen () {
