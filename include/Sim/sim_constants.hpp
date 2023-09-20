@@ -31,8 +31,8 @@ namespace sim {
     constexpr uint32_t MIN_SNAKE_LENGTH = 2;
     constexpr uint64_t MAX_ITERATION_NUMBER = 1000;
 
-    constexpr double FOOD_FITNESS_REWARD = 0.01;
-    constexpr double SURVIVAL_FITNESS_REWARD = 0.001;
+    constexpr double FOOD_FITNESS_REWARD = 1.0;
+    constexpr double SURVIVAL_FITNESS_REWARD = 1.0 / 15.0;
 
     constexpr size_t FAR_SIGHT_MAX_DISTANCE = 16;
     constexpr size_t SENSOR_PER_CELL = 6;
@@ -45,9 +45,9 @@ namespace sim {
 
     constexpr size_t NN_INPUT_SIZE = SENSORIAL_DATA;
     constexpr size_t NN_OUTPUT_SIZE = 3;
-    constexpr size_t NN_L1_SIZE = 64;
-    constexpr size_t NN_L2_SIZE = 128;
-    constexpr size_t NN_L3_SIZE = 32;
+    constexpr size_t NN_L1_SIZE = 71;
+    constexpr size_t NN_L2_SIZE = 127;
+    constexpr size_t NN_L3_SIZE = 15;
 
     constexpr bool USE_STD_VEC_FOR_INPUTS = false;
 

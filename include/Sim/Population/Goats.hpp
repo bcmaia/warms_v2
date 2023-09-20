@@ -39,6 +39,9 @@ namespace population {
                 for (Agent& agent : goats) {
                     agent.set_fitness( agent.get_fitness() * (1.0 - sim::GOATS_DECAY) );
                 }
+                std::stringstream ss;
+                ss << "Bests: < " << goats.front().get_fitness() << ", " << goats.back().get_fitness() << "> " ;
+                term::Term::instance().printat(1, 2, ss.str());
             }
 
             const Agent& get_rand_agent(uint64_t seed) const {
