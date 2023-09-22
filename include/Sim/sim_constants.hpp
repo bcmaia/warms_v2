@@ -21,10 +21,10 @@ namespace sim {
     //  without success.
     constexpr uint8_t MAX_ATEMPTS = 8;
 
-    constexpr float TARGET_FPS = 5.0;
+    constexpr float TARGET_FPS = 1.0;
 
     constexpr size_t NUMBER_OF_PETRI_DISHES = 16;
-    constexpr size_t POPULATION_SIZE = 32;
+    constexpr size_t POPULATION_SIZE = 64;
 
     constexpr float FOOD_ENERGY = 16.0;
     constexpr float ENERGY_PER_SNAKE_CELL = 16.0;

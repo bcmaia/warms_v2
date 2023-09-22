@@ -141,7 +141,7 @@ namespace agent {
             void move_head (Board& board) {
                 if (!alive || dying ) return; 
 
-                if (2 < length) set_neck(board);
+                if (1 <= length) set_neck(board);
                 set_head(board);
             }
 
@@ -154,9 +154,15 @@ namespace agent {
             }
 
             void move_tail (Board& board) {
-                if (!alive) return; 
+                if (!alive | entangled) return; 
+
+                if (0 >= length) {
+                    alive = false;
+                    dying = false;
+                    return;
+                }
+
                 if (dying) {
-                    if (entangled) return;
                     if (0 >= length) {
                         alive = false;
                         dying = false;
@@ -169,7 +175,17 @@ namespace agent {
                 }
 
                 // If we need to grow, do not move the tail
-                if (potential_length () > length) {length++; return;}
+                if (potential_length () > length) {
+                    length++; 
+                    cell::Cell c = board.get_raw(tail_position);
+                    if (!c.is_organism() && c.get_id() != id && 0 < length) {
+                        entangled = true;
+                        entangled_with = c.get_id();
+                    }
+                    tail_dir = c.get_dir();
+                    board.set_raw(tail_position, cell::Cell(cell::CellType::SnakeTail, genome.get_color(), tail_dir, id) );
+                    return;
+                }
 
                 // move the tail if potential_length() <= length
                 tail_foward (board, cell::Cell::Empty());
@@ -361,12 +377,14 @@ namespace agent {
 
             void tail_foward (Board& board, const cell::Cell leftover) {
                 // set_tail (board, tail_position);
+                if (entangled || length <= 0) return;
 
                 cell::Cell c = board.get_raw(tail_position);
                 tail_dir = c.get_dir();
         
-                if (!(c.is_organism()) || id != c.get_id()) {
-                    if (0 >= length) entangled = true;
+                if (!c.is_organism() || id != c.get_id()) {
+                    entangled = true;
+                    entangled_with = c.get_id();
                     return;
                 }
 
@@ -380,7 +398,7 @@ namespace agent {
                 if (c.is_organism() && c.get_id() == id) {
                     tail_dir = c.get_dir();
                     board.set_raw(tail_position, cell::Cell(cell::CellType::SnakeTail, genome.get_color(), tail_dir, id) );
-                } else if (0 < length) {
+                } else {
                     entangled = true;
                     entangled_with = c.get_id();
                 }

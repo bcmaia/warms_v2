@@ -146,7 +146,7 @@ namespace population {
                     a.set_dead();
                     
                     int32_t entangled_with = a.get_entangled_with();
-                    if (0 > entangled_with || live_agents.size() <= entangled_with) continue;
+                    if (entangled_with < 0 || entangled_with > live_agents.size()) continue;
                     board.die_by_id(entangled_with);
                     live_agents[entangled_with].set_dead();
                 }

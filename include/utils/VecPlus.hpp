@@ -38,12 +38,12 @@ namespace vec {
                 return point;
             
             case types::SimpleDir::Right:   
-                result.x() = -point.y();
+                result.x() = -point.y(); // -
                 result.y() = point.x();
                 return result;
 
             case types::SimpleDir::Down:
-                result.x() = point.x();
+                result.x() = -point.x();
                 result.y() = -point.y();
                 return result;
 
