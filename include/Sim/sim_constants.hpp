@@ -21,7 +21,7 @@ namespace sim {
     //  without success.
     constexpr uint8_t MAX_ATEMPTS = 8;
 
-    constexpr float TARGET_FPS = 1.0;
+    constexpr float TARGET_FPS = 5.0;
 
     constexpr size_t NUMBER_OF_PETRI_DISHES = 16;
     constexpr size_t POPULATION_SIZE = 64;
@@ -52,7 +52,8 @@ namespace sim {
     constexpr size_t NN_L5_SIZE = 15;
 
     constexpr bool USE_STD_VEC_FOR_INPUTS = false;
+    constexpr bool PRINT_CELL_AS_ID = false;
 
-    constexpr float MUTATION_RATE = 0.03;
+    constexpr float MUTATION_RATE = 0.02;
     // constexpr float COLOR_MUTATION_RATE = 0.05;
 }

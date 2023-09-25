@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include "utils/types.hpp"
+#include "Sim/sim_constants.hpp"
 
 
 namespace cell {
@@ -22,7 +23,7 @@ namespace cell {
         public:
             static Cell Empty () {return Cell(CellType::Empty, 0);}
             static Cell Food () {return Cell(CellType::Food, 1);}
-            static Cell Reserved () {return Cell(CellType::Reserved, 0);}
+            static Cell Reserved () {return Cell(CellType::Reserved, 1);}
             static Cell Wall () {return Cell(CellType::Wall, 2);}
 
             Cell () {}
@@ -83,11 +84,17 @@ namespace cell {
             }
             
             std::wstring to_str () const {
-                // std::wstringstream ss;
-                // if (-1 == id) ss << L".";
-                // else ss << id;
+                if constexpr (sim::PRINT_CELL_AS_ID) {
+                    std::wstringstream ss;
+                    if (-1 == id) ss << L".";
+                    else ss << (id % 10);
 
-                // return ss.str();
+                    if (type == CellType::SnakeHead) return L"h";
+                    if (type == CellType::Reserved) return L"r";
+
+
+                    return ss.str();
+                }
 
                 switch (type) {
                     case CellType::Empty: return L" ";

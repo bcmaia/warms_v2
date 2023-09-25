@@ -8,6 +8,9 @@
 #include <cmath>
 #include <limits>
 
+#include <chrono>
+#include <thread>
+
 #include "utils/types.hpp"
 #include "utils/Vec.hpp"
 // #include "utils/VecPlus.hpp"
@@ -95,6 +98,8 @@ namespace agent {
                 tail_position = temp;
                 neck_position = temp;
 
+                length = 1;
+
                 set_head(board);
             }
 
@@ -143,6 +148,7 @@ namespace agent {
 
                 if (1 <= length) set_neck(board);
                 set_head(board);
+                length++;
             }
 
             void feed (Board& board) {
@@ -154,7 +160,7 @@ namespace agent {
             }
 
             void move_tail (Board& board) {
-                if (!alive | entangled) return; 
+                if (!alive || entangled) return; 
 
                 if (0 >= length) {
                     alive = false;
@@ -175,8 +181,8 @@ namespace agent {
                 }
 
                 // If we need to grow, do not move the tail
-                if (potential_length () > length) {
-                    length++; 
+                if (potential_length() > length) {
+                    return;
                     cell::Cell c = board.get_raw(tail_position);
                     if (!c.is_organism() && c.get_id() != id && 0 < length) {
                         entangled = true;
@@ -189,6 +195,7 @@ namespace agent {
 
                 // move the tail if potential_length() <= length
                 tail_foward (board, cell::Cell::Empty());
+                length--;
 
                 // If we need to shrink, move the tail once more
                 if (potential_length() < length) {
@@ -347,7 +354,7 @@ namespace agent {
 
             int32_t id = 0;
 
-            uint32_t length = 1;
+            uint32_t length = 0;
             float energy = 5.0 * 16.0;
             float fitness = 0;
 
@@ -377,14 +384,15 @@ namespace agent {
 
             void tail_foward (Board& board, const cell::Cell leftover) {
                 // set_tail (board, tail_position);
-                if (entangled || length <= 0) return;
+                // if (entangled || length <= 0) return;
 
                 cell::Cell c = board.get_raw(tail_position);
                 tail_dir = c.get_dir();
         
                 if (!c.is_organism() || id != c.get_id()) {
-                    entangled = true;
-                    entangled_with = c.get_id();
+                    if (0 >= length) set_dead();
+                    else entangled = true;
+                    
                     return;
                 }
 
@@ -395,13 +403,18 @@ namespace agent {
 
                 c = board.get_raw(tail_position);
 
+                // if (c.is_organism() && c.get_id() == id) {
+                    
                 if (c.is_organism() && c.get_id() == id) {
-                    tail_dir = c.get_dir();
-                    board.set_raw(tail_position, cell::Cell(cell::CellType::SnakeTail, genome.get_color(), tail_dir, id) );
-                } else {
-                    entangled = true;
-                    entangled_with = c.get_id();
+                    board.set_raw(tail_position, cell::Cell(cell::CellType::SnakeTail, genome.get_color(), c.get_dir(), id) );
                 }
+                // } else {
+                //     entangled = true;
+                //     entangled_with = c.get_id();
+                //     std::stringstream ss;
+                //     ss << "aaa" << id << "-" << entangled_with << "aaa";
+                //     // throw std::runtime_error(ss.str());
+                // }
             }
 
             // void die_foward (Board& board) {
