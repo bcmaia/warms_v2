@@ -12,60 +12,137 @@ namespace cell {
     using Color = types::Color;
     using SimpleDir = types::SimpleDir;
 
-    /**
-     * @brief Enum representing the type of a cell.
-     */
+
     enum class CellType : uint8_t {
-        Empty = 0, ///< Empty cell
-        Wall,      ///< Wall cell
-        Food,      ///< Food cell
-        SnakeBody, ///< Snake body cell
-        SnakeHead, ///< Snake head cell
-        SnakeTail, ///< Snake tail cell
-        Reserved,  ///< Reserved cell
+        Empty = 0, Wall, Food, 
+        SnakeBody, SnakeHead, SnakeTail,
+        Reserved ,
     };
 
-    /**
-     * @brief Class representing a cell in a grid.
-     */
     class Cell {
-    public:
-        static Cell Empty();
-        static Cell Food();
-        static Cell Reserved();
-        static Cell Wall();
+        public:
+            static Cell Empty () {return Cell(CellType::Empty, 0);}
+            static Cell Food () {return Cell(CellType::Food, 1);}
+            static Cell Reserved () {return Cell(CellType::Reserved, 1);}
+            static Cell Wall () {return Cell(CellType::Wall, 2);}
 
-        Cell();
-        Cell(const CellType cell_type);
-        Cell(const CellType cell_type, const Color cell_color);
-        Cell(const CellType cell_type, const Color cell_color, const SimpleDir cell_dir, const uint32_t cell_id);
-        ~Cell();
+            Cell () {}
 
-        CellType get_type() const;
-        Color get_color() const;
-        SimpleDir get_dir() const;
-        int32_t get_id() const;
+            Cell (const CellType cell_type) : type(cell_type) {}
 
-        bool is_empty() const;
-        bool is_organism() const;
-        bool is_solid() const;
-        bool is_interesting() const;
-        bool is_food () const;
-        bool is_wall () const;
-        bool is_snake_tail () const;
-        bool is_snake_head () const;
-        bool is_snake_body () const;
+            Cell (const CellType cell_type, const Color cell_color) : 
+                type(cell_type), color(cell_color) 
+            {}
 
-        std::wstring to_str() const;
-        
-        bool operator!=(const Cell& other) const;
-        bool operator==(const Cell& other) const;
+            Cell (
+                const CellType cell_type, 
+                const Color cell_color,
+                const SimpleDir cell_dir,
+                const uint32_t cell_id
+            ) : 
+                type(cell_type), 
+                color(cell_color),
+                dir(cell_dir),
+                id(cell_id)
+            {}
 
-    private:
-        CellType type = CellType::Empty;
-        Color color = 0;
-        SimpleDir dir = SimpleDir::Up;
-        uint8_t amount = 0;
-        int32_t id = -1;
+            ~Cell () {}
+
+            CellType get_type () const {return type;}
+            Color get_color () const {return color;}
+            bool is_empty () const {return CellType::Empty == type;}
+            bool is_food () const {return CellType::Food == type;}
+            bool is_wall () const {return CellType::Wall == type;}
+            bool is_snake_tail () const {return CellType::SnakeTail == type;}
+            bool is_snake_head () const {return CellType::SnakeHead == type;}
+            bool is_snake_body () const {return CellType::SnakeHead == type;}
+            SimpleDir get_dir () const {return dir;}
+            int32_t get_id () const {return id;}
+
+            bool is_organism () const {
+                return (
+                    CellType::SnakeBody == type 
+                    || CellType::SnakeHead == type
+                    || CellType::SnakeTail == type
+                );
+            }
+
+
+            bool is_solid () const {
+                return (
+                    CellType::Wall == type
+                    || CellType::SnakeBody == type
+                    || CellType::SnakeHead == type
+                    || CellType::SnakeTail == type
+                );
+            }
+
+            bool is_interesting () const {
+                return (
+                    is_wall() || is_organism() || is_food()
+                );
+            }
+            
+            std::wstring to_str () const {
+                if constexpr (sim::PRINT_CELL_AS_ID) {
+                    std::wstringstream ss;
+                    if (-1 == id) ss << L".";
+                    else ss << (id % 10);
+
+                    if (type == CellType::SnakeHead) return L"h";
+                    if (type == CellType::Reserved) return L"r";
+
+
+                    return ss.str();
+                }
+
+                switch (type) {
+                    case CellType::Empty: return L" ";
+                    case CellType::Food: return L"&";
+                    case CellType::SnakeBody: 
+                        switch (dir) {
+                            case SimpleDir::Up: return L"↑";
+                            case SimpleDir::Right: return L"→";
+                            case SimpleDir::Down: return L"↓";
+                            case SimpleDir::Left: return L"←";
+                        }
+                        return L"*";
+                    case CellType::SnakeTail:
+                        switch (dir) {
+                            case SimpleDir::Up: return L"↟";
+                            case SimpleDir::Right: return L"↠";
+                            case SimpleDir::Down: return L"↡";
+                            case SimpleDir::Left: return L"↞";
+                        }
+                        return L"+";
+                    case CellType::SnakeHead:
+                        switch (dir) {
+                            case SimpleDir::Up: return L"⇑";
+                            case SimpleDir::Right: return L"⇒";
+                            case SimpleDir::Down: return L"⇓";
+                            case SimpleDir::Left: return L"⇐";
+                        }
+                        return L"@";
+                    case CellType::Reserved: return L"R";
+                    case CellType::Wall: return L"#";
+                    default: return L" ";
+                }
+            }
+
+            bool operator!= (const Cell& other) const {
+                return (type != other.get_type());
+            }
+
+            bool operator== (const Cell& other) const {
+                return (type == other.get_type());
+            }
+
+        private:
+            CellType type = CellType::Empty;
+            Color color = 0;
+            SimpleDir dir = SimpleDir::Up;
+            uint8_t amount = 0;
+
+            int32_t id = -1;
     };
 }
