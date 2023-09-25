@@ -68,6 +68,8 @@ namespace population {
                 }
             }
 
+            const std::vector<Agent>& get_goats() const {return goats;}
+
         private:
             Goats() : max_goats(sim::GOATS_SIZE) { goats.push_back(Agent(0, 0)); }
             Goats(const Goats&) = delete;

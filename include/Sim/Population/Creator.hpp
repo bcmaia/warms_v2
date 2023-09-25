@@ -24,6 +24,7 @@ namespace population {
             void clear () {
                 //std::lock_guard<std::mutex> lock(mutex_);
                 memory.clear();
+                memory = goats.get_goats();
             }
 
             void save (const std::vector<Agent>& agents) {
@@ -41,15 +42,8 @@ namespace population {
                 #endif
 
                 std::mt19937_64 rng_gen(seed);
-                std::bernoulli_distribution choice (sim::GET_FROM_GOATS_CHANCE);
                 std::uniform_int_distribution<int32_t> dist (0, memory.size() - 1);
 
-                if (choice(rng_gen)) {
-                    uint64_t new_seed = rng_gen();
-                    return goats.get_rand_agent(new_seed);
-                }
-
-                // else
                 return memory[dist(rng_gen)];
             }
 

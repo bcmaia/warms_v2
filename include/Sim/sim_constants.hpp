@@ -14,7 +14,7 @@ namespace sim {
     constexpr float PROCEDURAL_WALLS_FACTOR_4 = 0.72;
 
     constexpr size_t GOATS_SIZE = 16;
-    constexpr float GOATS_DECAY = 0.004;
+    constexpr float GOATS_DECAY = 0.001;
     constexpr float GET_FROM_GOATS_CHANCE = 1.0 / 8.0;
 
     // This constant determines how many times a random atempt can be executed
