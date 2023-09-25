@@ -60,15 +60,11 @@ public:
 
     Vec() {}
 
-    // Vec(const Direction dir) {
-    //     if constexpr (2 < D) throw std::out_of_range("Vector dimension is less than 2");
-
-    //     switch (dir) {
-    //         case Direction::Up:     *this = Vec<D, T>::Up;
-    //         case Direction::Right:  *this = Vec<D, T>::Right;
-    //         case Direction::Down:   *this = Vec<D, T>::Down;
-    //         case Direction::Left:   *this = Vec<D, T>::Left;
-    //         default:                *this = Vec<D, T>::Zero;
+    // Vec(const Vec<D, T> other) {
+    //     if constexpr (1 == D) {
+    //         v[0] = other[0];
+    //     } else if constexpr (1 == D) {
+    //         v[0] = other[0];
     //     }
     // }
 
